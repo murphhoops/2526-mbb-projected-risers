@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temple MBB Risers Board</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>:root{color-scheme:light}html{-webkit-text-size-adjust:100%}body{margin:0;font-size:14px;font-family:system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout: one row per player, a 0-100 track with a dot (score now) and an arrow to the projected score. Sorted by projected gain. */
+:root{
+  --bg:#f6f4f3; --panel:#ffffff; --fg:#1d1a1b; --muted:#6d6567; --line:#e3dedd;
+  --accent:#9d2235; --track:#ece7e6; --now:#6d6567; --q75:#2f7d4f;
+  --c0:#c8473f; --c1:#e08a3c; --c2:#d9bd3f; --c3:#8dba5a; --c4:#2f9a5c;
+  --display:'Barlow Condensed','Arial Narrow',sans-serif; --body:'Barlow',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#151213; --panel:#1e1a1b; --fg:#f1ecec; --muted:#a29a9c; --line:#322c2e;
+  --accent:#e0566a; --track:#2b2527; --now:#a29a9c; --q75:#5fbf86;
+  --c0:#d9605a; --c1:#e69a52; --c2:#d9c35a; --c3:#9bc96a; --c4:#4cbf7d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151213; --panel:#1e1a1b; --fg:#f1ecec; --muted:#a29a9c; --line:#322c2e;
+  --accent:#e0566a; --track:#2b2527; --now:#a29a9c; --q75:#5fbf86;
+  --c0:#d9605a; --c1:#e69a52; --c2:#d9c35a; --c3:#9bc96a; --c4:#4cbf7d; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);padding-inline:16px;padding-block:28px}
+.wrap{max-width:1000px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+h1{font:700 clamp(34px,6vw,54px)/.95 var(--display);text-transform:uppercase;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:14px;max-width:46ch;line-height:1.45;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:500 13px var(--body);background:var(--panel);color:var(--fg);border:0;padding:7px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-selected="true"]{background:var(--accent);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.k-now{width:10px;height:10px;border-radius:50%;background:var(--now)}
+.k-arr{width:22px;height:4px;background:var(--accent);border-radius:2px}
+.k-q{width:0;height:12px;border-left:2px dashed var(--q75)}
+.board{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 16px 10px}
+.axis,.row{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr) 204px 84px;gap:0 14px;align-items:center}
+.axis{padding:10px 0 4px;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.axis .ticks{position:relative;height:14px}
+.axis .ticks span{position:absolute;transform:translateX(-50%)}
+.axis .r{text-align:right;white-space:nowrap}
+.row{padding:7px 0;border-top:1px solid var(--line)}
+.who b{font:600 17px/1.1 var(--display);letter-spacing:.01em;display:block;overflow-wrap:anywhere}
+.who small{color:var(--muted);font-size:12px}
+.track{position:relative;height:22px;background:var(--track);border-radius:11px}
+.track .q{position:absolute;top:-3px;bottom:-3px;border-left:2px dashed var(--q75);left:75%;opacity:.8}
+.track .gain{position:absolute;top:9px;height:4px;background:var(--accent);border-radius:2px}
+.track .head{position:absolute;top:4px;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:10px solid var(--accent);transform:translateX(-9px)}
+.track .now{position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:var(--now);transform:translateX(-6px);border:2px solid var(--panel);box-sizing:content-box;margin-top:-2px;margin-left:0}
+.tm{display:block;font:500 11.5px/1.25 var(--body);color:var(--muted);margin-top:2px}.tm b{font-weight:600;color:var(--fg)}.tm.mv b{color:var(--accent)}.num .tm{text-align:right;white-space:normal}.who .tm{white-space:normal}.who .tm b,.num .tm b{display:inline;font:600 11.5px/1.25 var(--body);letter-spacing:0}
+.pill{font:600 14px var(--body);text-align:center;border-radius:5px;padding:4px 0;color:#14110f;font-variant-numeric:tabular-nums}
+.num{font:600 14px var(--body);text-align:right;font-variant-numeric:tabular-nums}
+.num em{font-style:normal;color:var(--accent);margin-left:4px;font-size:12px}
+.foot{margin-top:14px;color:var(--muted);font-size:12.5px;line-height:1.5;max-width:80ch}
+@media (max-width:640px){
+  .axis{display:none}
+  .row{grid-template-columns:minmax(0,1fr) 84px;gap:6px 10px}
+  .who{grid-column:1/-1}
+  .track{grid-column:1/-1;order:2}
+  .row .pill,.row .num{order:3}
+}
+@media (prefers-reduced-motion:no-preference){.row{transition:background .15s}.row:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>2026 <span>risers board</span></h1>
+  <p class="sub" id="sub"></p>
+</header>
+
+<div class="bar">
+  <div class="seg" role="tablist" aria-label="List">
+    <button type="button" role="tab" id="tab-jump" data-t="jump" aria-selected="true">Diamond Candidates</button>
+    <button type="button" role="tab" id="tab-top" data-t="top" aria-selected="false">Breakout Candidates</button>
+  </div>
+  <div class="legend">
+    <span><i class="k-now"></i>Score now</span>
+    <span><i class="k-arr"></i>Projected gain</span>
+    <span><i class="k-q"></i>Top-quarter line (75)</span>
+  </div>
+</div>
+
+<div class="board" role="tabpanel" aria-labelledby="tab-jump" id="panel">
+  <div class="axis">
+    <span>Player</span>
+    <div class="ticks"><span style="left:0%">0</span><span style="left:25%">25</span><span style="left:50%">50</span><span style="left:75%;color:var(--q75)">75</span><span style="left:99%">100</span></div>
+    <span class="r">Now → proj</span><span class="r">Breakout %</span>
+  </div>
+  <div id="rows"></div>
+</div>
+
+<p class="foot" id="foot"></p>
+</div>
+
+<script>
+var LISTS={
+  jump:{label:"Diamond Candidates",
+    sub:"The 25 players the model expects to climb the most next season. Each is currently below the 60th percentile and likely to play a real role. Scored on the 0 to 100 value scale.",
+    foot:"Chance of 500+ min is the model's estimate that he plays a real role next season. Breakout % is the chance he finishes at 75 or higher, given he does. In the 2021 to 2025 backtest these picks gained about +29 points on average among those who played 500+ minutes, versus +12 for a typical low scorer. About 1 in 8 reached the top quarter, the same as typical low scorers, so read this as a scouting list and not a prediction. Under each name is his 2026-27 team from the 2026 transfer portal data (CollegeBasketballData). Under the scores it reads last year's team to this year's team. A school in red means he changed schools. A player with no portal entry is shown at his previous school, which assumes he returns, so check that for seniors and early-entry players.",
+    rows:[["Donald Hand Jr.", "Boston College", "Jr", 22, 61, 67, 35, "Loyola Chicago", "moved"], ["Anthony Finkley", "Saint Joseph's", "Jr", 32, 69, 66, 53, "La Salle", "moved"], ["Donovan Rivers", "Jacksonville", "Jr", 9, 45, 51, 13, "Jacksonville", "stay"], ["Dasonte Bowen", "St. Bonaventure", "Jr", 23, 59, 69, 29, "Penn State", "moved"], ["Del Jones", "Radford", "So", 16, 52, 82, 18, "Seton Hall", "moved"], ["Jan Vide", "Loyola Marymount", "Jr", 25, 60, 75, 32, "Virginia", "moved"], ["Christian King", "Montana St.", "So", 26, 61, 65, 35, "Montana St.", "stay"], ["Mostapha El Moutaouakkil", "Jacksonville St.", "Sr", 16, 51, 52, 21, "", "pending"], ["Demarion Burch", "Bradley", "Jr", 16, 50, 58, 17, "Illinois State", "moved"], ["Baboucarr Njie", "UTSA", "So", 23, 56, 60, 29, "Temple", "moved"], ["Alijah Arenas", "USC", "Fr", 33, 66, 69, 47, "USC", "stay"], ["Jaxon Olvera", "Louisiana", "So", 10, 43, 75, 9, "Portland", "moved"], ["Mikey Williams", "Sacramento St.", "So", 16, 48, 54, 13, "", "pending"], ["Fraser Roxburgh", "Manhattan", "So", 6, 38, 56, 6, "Washington State", "moved"], ["Stefanos Spartalis", "Monmouth", "Fr", 19, 51, 65, 19, "Monmouth", "stay"], ["Bryce Cofield", "Cal St. Fullerton", "Fr", 17, 49, 68, 15, "Cal State Bakersfield", "moved"], ["Kevin de Kovachich", "North Alabama", "So", 13, 44, 68, 10, "Middle Tennessee", "moved"], ["Jaden Zimmerman", "Quinnipiac", "So", 11, 42, 73, 10, "Grand Canyon", "moved"], ["Malcolm Wrisby-Jefferson", "Brown", "Jr", 16, 47, 53, 11, "Brown", "stay"], ["Antonio Munoz", "Grambling St.", "Fr", 9, 39, 61, 8, "Grambling St.", "stay"], ["Cornelius Robinson Jr.", "Monmouth", "Jr", 27, 58, 69, 27, "Hampton", "moved"], ["Kiyan Anthony", "Syracuse", "Fr", 22, 53, 69, 19, "Syracuse", "stay"], ["Jaden Daughtry", "Richmond", "Jr", 28, 58, 59, 32, "Stony Brook", "moved"], ["Josh Reed", "Drexel", "So", 6, 36, 62, 5, "Drexel", "stay"], ["Adrian Uchidiuno", "Brown", "Jr", 10, 40, 65, 6, "Brown", "stay"]]},
+  top:{label:"Breakout Candidates",
+    sub:"The 25 players with the best chance of finishing next season in the top quarter of D1 (score 75 or higher). Non-seniors with 200+ minutes who are currently at or below 75. Scored on the 0 to 100 value scale.",
+    foot:"Breakout % is the chance he finishes at 75 or higher, given he plays 500+ minutes. Chance of 500+ min is the model's estimate that he plays a real role next season, so check it before leaning on the top-quarter number. In the 2021 to 2025 backtest, 24 of the 50 top-ten picks reached the top quarter, and 22 of the 30 who played 500+ minutes did. Under each name is his 2026-27 team from the 2026 transfer portal data (CollegeBasketballData). Under the scores it reads last year's team to this year's team. A school in red means he changed schools. A player with no portal entry is shown at his previous school, which assumes he returns, so check that for seniors and early-entry players.",
+    rows:[["PJ Haggerty", "Kansas St.", "Jr", 73, 94, 91, 93, "Texas A&M", "moved"], ["Jalen Haralson", "Notre Dame", "Fr", 69, 92, 87, 91, "Tennessee", "moved"], ["Ian Platteeuw", "Davidson", "Fr", 72, 92, 73, 89, "Davidson", "stay"], ["Tylen Riley", "Tulsa", "Jr", 73, 87, 91, 88, "Cincinnati", "moved"], ["Neoklis Avdalas", "Virginia Tech", "Fr", 68, 89, 85, 86, "North Carolina", "moved"], ["Donnie Freeman", "Syracuse", "So", 71, 89, 79, 86, "St. John's", "moved"], ["Aaron Bradshaw", "Memphis", "Jr", 71, 89, 58, 85, "Tennessee State", "moved"], ["Dorin Buca", "Kansas St.", "Jr", 71, 82, 27, 82, "Rutgers", "moved"], ["David Fuchs", "San Francisco", "Jr", 69, 83, 70, 82, "Clemson", "moved"], ["Tyler Harris", "Vanderbilt", "Jr", 62, 83, 74, 81, "UNLV", "moved"], ["Connor Turnbull", "Evansville", "Jr", 57, 81, 36, 80, "Utah State", "moved"], ["Elijah Perryman", "Utah St.", "Fr", 71, 83, 80, 80, "Cincinnati", "moved"], ["Khadim Mboup", "BYU", "So", 73, 84, 76, 80, "BYU", "stay"], ["Layden Blocker", "DePaul", "Jr", 71, 85, 90, 80, "DePaul", "stay"], ["Will Garlock", "Wisconsin", "Fr", 73, 82, 54, 80, "Wisconsin", "stay"], ["Derek Dixon", "North Carolina", "Fr", 75, 85, 83, 79, "Arizona", "moved"], ["TJ Williams", "Wichita St.", "Fr", 74, 84, 74, 79, "Wichita St.", "stay"], ["Sadiq White Jr.", "Syracuse", "Fr", 71, 84, 62, 78, "Syracuse", "stay"], ["JT Pettigrew", "Valparaiso", "Fr", 65, 82, 84, 78, "Valparaiso", "stay"], ["ND Okafor", "Washington St.", "Jr", 72, 81, 64, 78, "Mississippi State", "moved"], ["Terrence Brown", "Utah", "Jr", 70, 79, 91, 77, "North Carolina", "moved"], ["Malik Mack", "Georgetown", "Jr", 72, 81, 88, 77, "Providence", "moved"], ["Pearson Carmichael", "Boise St.", "So", 67, 81, 77, 76, "Boise St.", "stay"], ["Mookie Cook", "San Francisco", "Jr", 73, 83, 62, 76, "San José State", "moved"], ["Boden Kapke", "Boston College", "Jr", 64, 81, 75, 75, "Nebraska", "moved"]]}
+};
+var cur="jump";
+function col(p){return p>=70?"var(--c4)":p>=50?"var(--c3)":p>=30?"var(--c2)":p>=15?"var(--c1)":"var(--c0)"}
+function thisTeam(d,raw){var t=d[8]==="pending"?"In the portal, no destination yet":d[7];return raw?t:esc(t)}
+function shortThis(d){return d[8]==="pending"?"in portal":esc(d[7])}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function render(){
+  var L=LISTS[cur], rows=L.rows.slice();
+  rows.sort(function(a,b){return cur==="jump"?((b[4]-b[3])-(a[4]-a[3])):(b[6]-a[6])});
+  document.getElementById("sub").textContent=L.sub;
+  document.getElementById("foot").textContent=L.foot;
+  document.getElementById("panel").setAttribute("aria-labelledby","tab-"+cur);
+  document.getElementById("rows").innerHTML=rows.map(function(d){
+    var g=d[4]-d[3];
+    return '<div class="row"><div class="who"><b>'+esc(d[0])+'</b><small>'+d[2]+' · '+d[5]+'% to play 500+ min</small>'+
+      '<span class="tm'+(d[8]==="moved"?" mv":"")+'"><b>'+thisTeam(d)+'</b></span></div>'+
+      '<div class="track" role="img" aria-label="'+esc(d[0])+': '+d[3]+' now, '+d[4]+' projected"><span class="q"></span>'+
+      '<span class="gain" style="left:'+d[3]+'%;width:'+g+'%"></span><span class="head" style="left:'+d[4]+'%"></span><span class="now" style="left:'+d[3]+'%"></span></div>'+
+      '<div class="num">'+d[3]+' → '+d[4]+'<em>+'+g+'</em><span class="tm'+(d[8]==="moved"?" mv":"")+'" title="'+esc(d[1])+' → '+esc(thisTeam(d,1))+'">'+esc(d[1])+' → <b>'+shortThis(d)+'</b></span></div>'+
+      '<div class="pill" style="background:'+col(d[6])+'">'+d[6]+'%</div></div>';
+  }).join("");
+}
+document.querySelectorAll(".seg button").forEach(function(b){b.addEventListener("click",function(){
+  cur=b.dataset.t;document.querySelectorAll(".seg button").forEach(function(x){x.setAttribute("aria-selected",x===b)});render()})});
+render();
+</script>
+</body>
+</html>
